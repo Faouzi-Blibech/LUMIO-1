@@ -48,17 +48,37 @@ const LoginPage: React.FC = () => {
 
       await login(formData.email, formData.password, formData.role)
 
-      // Redirect based on role
-      const roleRoute: Record<string, string> = {
-        student: '/student',
-        teacher: '/teacher',
-        parent: '/parent'
+      // After successful login, get the user from context and redirect based on role
+      // The login() call sets isLoading to false after success, so we check the response
+      // by using the user's role to determine the route
+      const roleRoutes: Record<string, string> = {
+        student: '/student/session',
+        teacher: '/teacher/dashboard',
+        parent: '/parent/overview'
       }
 
-      navigate(roleRoute[formData.role])
+      // Redirect to role-specific route
+      navigate(roleRoutes[formData.role])
     } catch (err) {
+      // Handle specific error codes
       if (err instanceof Error) {
-        setError(err.message || 'Login failed. Please try again.')
+        const errorMessage = err.message
+
+        if (errorMessage.includes('401')) {
+          setError('Invalid email or password')
+        } else if (errorMessage.includes('403')) {
+          setError('Wrong role selected')
+        } else if (
+          errorMessage.includes('ECONNREFUSED') ||
+          errorMessage.includes('Network') ||
+          errorMessage.includes('cannot connect')
+        ) {
+          setError('Cannot reach server — check your connection')
+        } else {
+          setError(errorMessage || 'Login failed. Please try again.')
+        }
+      } else if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('Cannot reach server — check your connection')
       } else {
         setError('An unexpected error occurred. Please try again.')
       }
