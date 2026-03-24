@@ -1,0 +1,77 @@
+services:
+  fastapi:
+    build: ./backend
+    container_name: lumio-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./faiss_index:/app/faiss_index
+      - ./backend/models:/app/models
+      - ./kb:/app/kb
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lumio-net
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    container_name: lumio-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: lumio
+      POSTGRES_USER: lumio
+      POSTGRES_PASSWORD: localdev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumio"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lumio-net
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: lumio-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lumio-net
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n
+    container_name: lumio-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - WEBHOOK_URL=http://localhost:5678
+      - N8N_BASIC_AUTH_ACTIVE=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - lumio-net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  n8n_data:
+
+networks:
+  lumio-net:
+    driver: bridge
