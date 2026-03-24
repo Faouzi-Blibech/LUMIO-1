@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useCallback } from 'react'
 import { FocusPayload } from '../types'
+import useFocusStream from '../hooks/useFocusStream'
 
 interface CVModuleProps {
   studentId: string
+  classId: string
   onFocusData: (payload: FocusPayload) => void
   active: boolean
 }
@@ -15,7 +17,7 @@ declare global {
   }
 }
 
-const CVModule: React.FC<CVModuleProps> = ({ studentId, onFocusData, active }) => {
+const CVModule: React.FC<CVModuleProps> = ({ studentId, classId, onFocusData, active }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const faceMeshRef = useRef<any>(null)
@@ -23,6 +25,11 @@ const CVModule: React.FC<CVModuleProps> = ({ studentId, onFocusData, active }) =
   const streamRef = useRef<MediaStream | null>(null)
   const blinkTimestampsRef = useRef<number[]>([])
   const lastEARRef = useRef<number>(0.4)
+  const latestPayloadRef = useRef<FocusPayload | null>(null)
+  const sendIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Initialize focus stream
+  const { sendFocus, connectionState } = useFocusStream(studentId, classId, active)
 
   // Helper: Clamp value between 0 and 1
   const clamp = (value: number, min: number, max: number): number => {
@@ -211,6 +218,16 @@ const CVModule: React.FC<CVModuleProps> = ({ studentId, onFocusData, active }) =
         focus_score,
         ts: Date.now()
       })
+
+      // Store latest payload for sending via useFocusStream
+      latestPayloadRef.current = {
+        gaze_x,
+        gaze_y,
+        blink_rate,
+        head_pose_deg,
+        focus_score,
+        ts: Date.now()
+      }
     },
     [onFocusData]
   )
@@ -324,6 +341,25 @@ const CVModule: React.FC<CVModuleProps> = ({ studentId, onFocusData, active }) =
       cleanup()
     }
   }, [active, initillizeFaceMesh, cleanup])
+
+  // 1-second interval to send focus data via WebSocket
+  useEffect(() => {
+    if (!active || !sendFocus) return
+
+    sendIntervalRef.current = setInterval(() => {
+      if (latestPayloadRef.current && connectionState === 'open') {
+        console.log('[FOCUS SEND]', latestPayloadRef.current)
+        sendFocus(latestPayloadRef.current)
+      }
+    }, 1000)
+
+    return () => {
+      if (sendIntervalRef.current) {
+        clearInterval(sendIntervalRef.current)
+        sendIntervalRef.current = null
+      }
+    }
+  }, [active, sendFocus, connectionState])
 
   // Hidden video element for MediaPipe processing
   return (
