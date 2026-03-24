@@ -1,14 +1,17 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50">
-        <Routes>
-          <Route path="/" element={<Home />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50">
+          <Routes>
+            <Route path="/" element={<Home />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   )
 }
 
