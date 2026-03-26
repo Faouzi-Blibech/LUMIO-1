@@ -181,7 +181,7 @@ const useClassStream = (classId: string, teacherId: string): UseClassStreamRetur
     return () => {
       disconnect()
     }
-  }, [classId])
+  }, [classId, fetchInitialStudents, connect, disconnect])
 
   return {
     studentsLive,
