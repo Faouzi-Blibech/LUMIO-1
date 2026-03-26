@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import FocusBar from './FocusBar'
 import { StudentLiveData } from '../hooks/useClassStream'
 
@@ -7,7 +7,7 @@ interface StudentCardProps {
 }
 
 export const StudentCard: React.FC<StudentCardProps> = ({ student }) => {
-  // Determine risk tile badge color
+  // Determine risk tier badge color
   const riskBadgeStyle = useMemo(() => {
     switch (student.risk_tier) {
       case 'low':
@@ -21,16 +21,24 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student }) => {
     }
   }, [student.risk_tier])
 
-  // Format last updated time
-  const formattedTime = useMemo(() => {
-    const now = Date.now()
-    const elapsed = now - student.updated_at
-    const seconds = Math.floor(elapsed / 1000)
-    const minutes = Math.floor(seconds / 60)
+  // Format last updated time (refresh every second for accurate display)
+  const [formattedTime, setFormattedTime] = useState('just now')
 
-    if (seconds < 60) return `${seconds}s ago`
-    if (minutes < 60) return `${minutes}m ago`
-    return 'offline'
+  useEffect(() => {
+    const updateTime = () => {
+      const now = Date.now()
+      const elapsed = now - student.updated_at
+      const seconds = Math.floor(elapsed / 1000)
+      const minutes = Math.floor(seconds / 60)
+
+      if (seconds < 60) setFormattedTime(`${seconds}s ago`)
+      else if (minutes < 60) setFormattedTime(`${minutes}m ago`)
+      else setFormattedTime('offline')
+    }
+
+    updateTime()
+    const interval = setInterval(updateTime, 1000)
+    return () => clearInterval(interval)
   }, [student.updated_at])
 
   return (

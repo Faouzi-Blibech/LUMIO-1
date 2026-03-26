@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import useClassStream from '../../hooks/useClassStream'
 import StudentCard from '../../components/StudentCard'
@@ -15,6 +15,11 @@ export const DashboardPage: React.FC = () => {
     selectedClassId,
     teacherId
   )
+  
+  // Handle class selection change
+  const handleClassChange = (classId: string) => {
+    setSelectedClassId(classId)
+  }
 
   // Convert to array and sort by name
   const studentsArray = useMemo(() => {
@@ -64,7 +69,7 @@ export const DashboardPage: React.FC = () => {
           {/* Class selector dropdown */}
           <select
             value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
+            onChange={(e) => handleClassChange(e.target.value)}
             className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white text-sm font-medium hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           >
             {classes.map((cls) => (
