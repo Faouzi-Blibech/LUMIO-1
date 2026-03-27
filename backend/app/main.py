@@ -9,18 +9,27 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import init_db
 from app.routers import auth, sessions, analytics, rag, homework
+from app.services.redis_service import init_redis, close_redis
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Lifespan context manager handles startup and shutdown.
-    On startup: create all DB tables if they don't exist yet.
+
+    Startup order matters:
+      1. init_db()    — create DB tables (idempotent: CREATE TABLE IF NOT EXISTS)
+      2. init_redis() — open the Redis connection pool
+
+    Shutdown:
+      close_redis() — drain in-flight Redis commands and close the TCP connection
     """
     print("Lumio API starting up...")
     await init_db()
-    print("Database ready.")
+    await init_redis()
+    print("Database and Redis ready.")
     yield
+    await close_redis()
     print("Lumio API shutting down.")
 
 
