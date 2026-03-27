@@ -10,6 +10,7 @@ from app.config import settings
 from app.database import init_db
 from app.routers import auth, sessions, analytics, rag, homework
 from app.services.redis_service import init_redis, close_redis
+from app.services.rag_service import init_rag
 
 
 @asynccontextmanager
@@ -20,6 +21,10 @@ async def lifespan(app: FastAPI):
     Startup order matters:
       1. init_db()    — create DB tables (idempotent: CREATE TABLE IF NOT EXISTS)
       2. init_redis() — open the Redis connection pool
+      3. init_rag()   — load FAISS index + embedding model into memory
+
+    init_rag() is last because it's the slowest (~3-5s for embedding model load)
+    and doesn't block the other services from being ready.
 
     Shutdown:
       close_redis() — drain in-flight Redis commands and close the TCP connection
@@ -27,7 +32,8 @@ async def lifespan(app: FastAPI):
     print("Lumio API starting up...")
     await init_db()
     await init_redis()
-    print("Database and Redis ready.")
+    await init_rag()
+    print("Database, Redis and RAG ready.")
     yield
     await close_redis()
     print("Lumio API shutting down.")
