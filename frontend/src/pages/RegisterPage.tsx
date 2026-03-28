@@ -22,56 +22,248 @@ const RegisterPage: React.FC = () => {
   const [searchParams] = useSearchParams()
   const { register, isLoading } = useAuth()
 
-  // Get role from URL params, default to student\n  const urlRole = (searchParams.get('role') || 'student') as 'student' | 'teacher' | 'parent'
+  // Get role from URL params, default to student
+  const urlRole = (searchParams.get('role') || 'student') as 'student' | 'teacher' | 'parent'
 
-  const [formData, setFormData] = useState<RegisterFormData>({\n    name: '',\n    email: '',\n    password: '',\n    confirmPassword: '',\n    role: urlRole\n  })\n  const [errors, setErrors] = useState<FormErrors>({})\n  const [generalError, setGeneralError] = useState<string>('')
+  const [formData, setFormData] = useState<RegisterFormData>({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: urlRole
+  })
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [generalError, setGeneralError] = useState<string>('')
   const [loadingState, setLoadingState] = useState<'idle' | 'loading'>('idle')
 
-  useEffect(() => {\n    setFormData(prev => ({ ...prev, role: urlRole }))  }, [urlRole])
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, role: urlRole }))
+  }, [urlRole])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    const { name, value } = e.target\n    setFormData(prev => ({\n      ...prev,\n      [name]: value\n    }))\n    if (errors[name as keyof FormErrors]) {\n      setErrors(prev => ({\n        ...prev,\n        [name]: undefined\n      }))\n    }\n    if (generalError) setGeneralError('')\n  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }))
+    }
+    if (generalError) setGeneralError('')
+  }
 
-  const validateForm = (): boolean => {\n    const newErrors: FormErrors = {}
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {}
 
-    if (!formData.name.trim()) {\n      newErrors.name = 'Full name is required'\n    } else if (formData.name.trim().length < 2) {\n      newErrors.name = 'Name must be at least 2 characters'\n    }
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full name is required'
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters'
+    }
 
-    if (!formData.email.trim()) {\n      newErrors.email = 'Email is required'\n    } else {\n      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/\n      if (!emailRegex.test(formData.email)) {\n        newErrors.email = 'Please enter a valid email address'\n      }\n    }
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required'
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address'
+      }
+    }
 
-    if (!formData.password) {\n      newErrors.password = 'Password is required'\n    } else if (formData.password.length < 6) {\n      newErrors.password = 'Password must be at least 6 characters'\n    }
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
 
-    if (!formData.confirmPassword) {\n      newErrors.confirmPassword = 'Please confirm your password'\n    } else if (formData.password !== formData.confirmPassword) {\n      newErrors.confirmPassword = 'Passwords do not match'\n    }
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password'
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
+    }
 
-    setErrors(newErrors)\n    return Object.keys(newErrors).length === 0\n  }
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {\n    e.preventDefault()\n    setGeneralError('')
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setGeneralError('')
     setLoadingState('loading')
 
-    if (!validateForm()) {\n      setLoadingState('idle')\n      return\n    }
+    if (!validateForm()) {
+      setLoadingState('idle')
+      return
+    }
 
-    try {\n      await register(formData.name, formData.email, formData.password, formData.role)
+    try {
+      await register(formData.name, formData.email, formData.password, formData.role)
 
-      const roleRoute: Record<string, string> = {\n        student: '/student/session',\n        teacher: '/teacher/dashboard',\n        parent: '/parent/overview'\n      }
+      const roleRoute: Record<string, string> = {
+        student: '/student/session',
+        teacher: '/teacher/dashboard',
+        parent: '/parent/overview'
+      }
 
-      navigate(roleRoute[formData.role])\n    } catch (err) {\n      if (err instanceof Error) {\n        setGeneralError(err.message || 'Registration failed. Please try again.')\n      } else {\n        setGeneralError('An unexpected error occurred. Please try again.')\n      }\n      setLoadingState('idle')\n    }\n  }
+      navigate(roleRoute[formData.role])
+    } catch (err) {
+      if (err instanceof Error) {
+        setGeneralError(err.message || 'Registration failed. Please try again.')
+      } else {
+        setGeneralError('An unexpected error occurred. Please try again.')
+      }
+      setLoadingState('idle')
+    }
+  }
 
-  const roleName = {\n    student: 'Student',\n    teacher: 'Teacher',\n    parent: 'Parent'\n  }[formData.role]
+  const roleName = {
+    student: 'Student',
+    teacher: 'Teacher',
+    parent: 'Parent'
+  }[formData.role]
 
-  return (\n    <div className=\"min-h-screen bg-bg flex items-center justify-center px-6 py-12\">\n      <div className=\"w-full max-w-md\">\n        {/* Header */}\n        <div className=\"text-center mb-12\">\n          <h1 className=\"text-xl font-display font-bold text-ink mb-2\" style={{ fontSize: 'clamp(56px, 10vw, 140px)' }}>\n            LUMIO\n          </h1>\n          <p className=\"text-sm text-muted font-mono\" style={{ letterSpacing: '0.2em', textTransform: 'uppercase' }}>\n            — Create Account\n          </p>\n        </div>
+  return (    <div className="min-h-screen bg-bg flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-xl font-display font-bold text-ink mb-2" style={{ fontSize: 'clamp(56px, 10vw, 140px)' }}>
+            LUMIO
+          </h1>
+          <p className="text-sm text-muted font-mono" style={{ letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+            — Create Account
+          </p>
+        </div>
 
-        {/* Form Card */}\n        <div className=\"bg-surface border border-border p-12 mb-8\">\n          {/* General Error Message */}\n          {generalError && (\n            <div className=\"mb-8 p-4 bg-red-50 border-[1.5px] border-red-600\">\n              <p className=\"text-red-600 text-sm font-mono\">{generalError}</p>\n            </div>\n          )}
+        {/* Form Card */}
+        <div className="bg-surface border border-border p-12 mb-8">
+          {/* General Error Message */}
+          {generalError && (
+            <div className="mb-8 p-4 bg-red-50 border-[1.5px] border-red-600">
+              <p className="text-red-600 text-sm font-mono">{generalError}</p>
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className=\"space-y-6\">\n            {/* Full Name Field */}\n            <div>\n              <label htmlFor=\"name\" className=\"form-label\">\n                Full Name\n              </label>\n              <input\n                type=\"text\"\n                id=\"name\"\n                name=\"name\"\n                value={formData.name}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"John Doe\"\n                className={`input-field ${\n                  errors.name ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.name && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.name}</p>\n              )}\n            </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Full Name Field */}
+            <div>
+              <label htmlFor="name" className="form-label">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                disabled={loadingState === 'loading'}
+                placeholder="John Doe"
+                className={`input-field ${
+                  errors.name ? 'border-red-600' : ''
+                }`}
+              />
+              {errors.name && (
+                <p className="text-red-600 text-xs mt-2 font-mono">{errors.name}</p>
+              )}
+            </div>
 
-            {/* Email Field */}\n            <div>\n              <label htmlFor=\"email\" className=\"form-label\">\n                Email\n              </label>\n              <input\n                type=\"email\"\n                id=\"email\"\n                name=\"email\"\n                value={formData.email}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"name@example.com\"\n                className={`input-field ${\n                  errors.email ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.email && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.email}</p>\n              )}\n            </div>
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="form-label">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={loadingState === 'loading'}
+                placeholder="name@example.com"
+                className={`input-field ${
+                  errors.email ? 'border-red-600' : ''
+                }`}
+              />
+              {errors.email && (
+                <p className="text-red-600 text-xs mt-2 font-mono">{errors.email}</p>
+              )}
+            </div>
 
-            {/* Password Field */}\n            <div>\n              <label htmlFor=\"password\" className=\"form-label\">\n                Password\n              </label>\n              <input\n                type=\"password\"\n                id=\"password\"\n                name=\"password\"\n                value={formData.password}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"••••••••\"\n                className={`input-field ${\n                  errors.password ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.password && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.password}</p>\n              )}\n            </div>
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                disabled={loadingState === 'loading'}
+                placeholder="••••••••"
+                className={`input-field ${
+                  errors.password ? 'border-red-600' : ''
+                }`}
+              />
+              {errors.password && (
+                <p className="text-red-600 text-xs mt-2 font-mono">{errors.password}</p>
+              )}
+            </div>
 
-            {/* Confirm Password Field */}\n            <div>\n              <label htmlFor=\"confirmPassword\" className=\"form-label\">\n                Confirm Password\n              </label>\n              <input\n                type=\"password\"\n                id=\"confirmPassword\"\n                name=\"confirmPassword\"\n                value={formData.confirmPassword}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"••••••••\"\n                className={`input-field ${\n                  errors.confirmPassword ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.confirmPassword && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.confirmPassword}</p>\n              )}\n            </div>
+            {/* Confirm Password Field */}
+            <div>
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                disabled={loadingState === 'loading'}
+                placeholder="••••••••"
+                className={`input-field ${
+                  errors.confirmPassword ? 'border-red-600' : ''
+                }`}
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-600 text-xs mt-2 font-mono">{errors.confirmPassword}</p>
+              )}
+            </div>
 
-            {/* Create Account Button */}\n            <button\n              type=\"submit\"\n              disabled={loadingState === 'loading'}\n              className=\"btn-accent w-full\"\n            >\n              {loadingState === 'loading' ? 'Creating account...' : 'Create Account'}\n            </button>\n          </form>
+            {/* Create Account Button */}
+            <button
+              type="submit"
+              disabled={loadingState === 'loading'}
+              className="btn-accent w-full"
+            >
+              {loadingState === 'loading' ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
 
-          {/* Login Link */}\n          <p className=\"text-center text-muted text-sm font-mono mt-8\" style={{ letterSpacing: '0.02em' }}>\n            Already registered?{' '}\n            <a\n              href={`/login?role=${formData.role}`}\n              className=\"text-accent hover:underline font-bold transition-colors\"\n            >\n              Sign In\n            </a>\n          </p>\n        </div>
+          {/* Login Link */}
+          <p className="text-center text-muted text-sm font-mono mt-8" style={{ letterSpacing: '0.02em' }}>
+            Already registered?{' '}
+            <a
+              href={`/login?role=${formData.role}`}
+              className="text-accent hover:underline font-bold transition-colors"
+            >
+              Sign In
+            </a>
+          </p>
+        </div>
 
-        {/* Footer */}\n        <div className=\"text-center text-muted text-xs font-mono\" style={{ letterSpacing: '0.15em', textTransform: 'uppercase' }}>\n          <p>© 2026 Lumio — by Unblur</p>\n        </div>\n      </div>\n    </div>\n  )\n}
+        {/* Footer */}
+        <div className="text-center text-muted text-xs font-mono" style={{ letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+          <p>© 2026 Lumio — by Unblur</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default RegisterPage

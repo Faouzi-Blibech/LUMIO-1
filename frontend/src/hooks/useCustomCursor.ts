@@ -29,13 +29,39 @@ export const useCustomCursor = () => {
       cursor.classList.remove('hover')
     }
 
-    const isInteractive = (el: HTMLElement): boolean => {\n      const interactiveTags = ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA', 'LABEL']\n      if (interactiveTags.includes(el.tagName)) return true\n\n      const role = el.getAttribute('role')\n      const interactiveRoles = ['button', 'link', 'menuitem', 'tab', 'checkbox', 'radio']\n      if (role && interactiveRoles.includes(role)) return true\n\n      return el.onclick !== null || el.style.cursor === 'pointer'\n    }
+    const isInteractive = (el: HTMLElement): boolean => {
+            const interactiveTags = ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA', 'LABEL']
+                  if (interactiveTags.includes(el.tagName)) return true
+                  
+                  const role = el.getAttribute('role')
+                        const interactiveRoles = ['button', 'link', 'menuitem', 'tab', 'checkbox', 'radio']
+                              if (role && interactiveRoles.includes(role)) return true
+                              
+                              return el.onclick !== null || el.style.cursor === 'pointer'
+                                }
 
-    document.addEventListener('mousemove', moveCursor)\n    document.addEventListener('mouseenter', handleMouseEnter, true)\n    document.addEventListener('mouseleave', handleMouseLeave, true)
+    document.addEventListener('mousemove', moveCursor)
+       document.addEventListener('mouseenter', handleMouseEnter, true)
+          document.addEventListener('mouseleave', handleMouseLeave, true)
 
     // Add hover detection for interactive elements
-    const addHoverListeners = () => {\n      const interactiveElements = document.querySelectorAll('button, a, input, select, textarea, [role=\"button\"], [role=\"link\"], [onclick]')\n      interactiveElements.forEach(el => {\n        el.addEventListener('mouseenter', handleMouseEnter as any)\n        el.addEventListener('mouseleave', handleMouseLeave)\n      })\n    }
+    const addHoverListeners = () => {
+            const interactiveElements = document.querySelectorAll('button, a, input, select, textarea, [role=\"button\"], [role=\"link\"], [onclick]')
+            interactiveElements.forEach(el => {
+              el.addEventListener('mouseenter', handleMouseEnter as any)
+              el.addEventListener('mouseleave', handleMouseLeave)
 
-    addHoverListeners()
+          })
+      }
 
-    return () => {\n      document.removeEventListener('mousemove', moveCursor)\n      document.removeEventListener('mouseenter', handleMouseEnter, true)\n      document.removeEventListener('mouseleave', handleMouseLeave, true)\n      cursor.remove()\n    }\n  }, [])\n}\n
+    addHoverListeners
+
+
+    return () => {
+            document.removeEventListener('mousemove', moveCursor)
+           document.removeEventListener('mouseenter', handleMouseEnter, true)
+           document.removeEventListener('mouseleave', handleMouseLeave, true)
+           cursor.remove()
+              }
+            }, [])
+          }
