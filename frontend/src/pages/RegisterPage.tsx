@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 interface RegisterFormData {
@@ -19,284 +19,59 @@ interface FormErrors {
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { register, isLoading } = useAuth()
-  const [formData, setFormData] = useState<RegisterFormData>({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'student'
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [generalError, setGeneralError] = useState<string>('')
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    // Clear field error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined
-      }))
-    }
-    // Clear general error
-    if (generalError) setGeneralError('')
-  }
+  // Get role from URL params, default to student\n  const urlRole = (searchParams.get('role') || 'student') as 'student' | 'teacher' | 'parent'
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
+  const [formData, setFormData] = useState<RegisterFormData>({\n    name: '',\n    email: '',\n    password: '',\n    confirmPassword: '',\n    role: urlRole\n  })\n  const [errors, setErrors] = useState<FormErrors>({})\n  const [generalError, setGeneralError] = useState<string>('')
+  const [loadingState, setLoadingState] = useState<'idle' | 'loading'>('idle')
 
-    // Validate name
-    if (!formData.name.trim()) {
-      newErrors.name = 'Full name is required'
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters'
-    }
+  useEffect(() => {\n    setFormData(prev => ({ ...prev, role: urlRole }))  }, [urlRole])
 
-    // Validate email
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email address'
-      }
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    const { name, value } = e.target\n    setFormData(prev => ({\n      ...prev,\n      [name]: value\n    }))\n    if (errors[name as keyof FormErrors]) {\n      setErrors(prev => ({\n        ...prev,\n        [name]: undefined\n      }))\n    }\n    if (generalError) setGeneralError('')\n  }
 
-    // Validate password
-    if (!formData.password) {
-      newErrors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
-    }
+  const validateForm = (): boolean => {\n    const newErrors: FormErrors = {}
 
-    // Validate confirm password
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password'
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
-    }
+    if (!formData.name.trim()) {\n      newErrors.name = 'Full name is required'\n    } else if (formData.name.trim().length < 2) {\n      newErrors.name = 'Name must be at least 2 characters'\n    }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    if (!formData.email.trim()) {\n      newErrors.email = 'Email is required'\n    } else {\n      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/\n      if (!emailRegex.test(formData.email)) {\n        newErrors.email = 'Please enter a valid email address'\n      }\n    }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setGeneralError('')
+    if (!formData.password) {\n      newErrors.password = 'Password is required'\n    } else if (formData.password.length < 6) {\n      newErrors.password = 'Password must be at least 6 characters'\n    }
 
-    if (!validateForm()) {
-      return
-    }
+    if (!formData.confirmPassword) {\n      newErrors.confirmPassword = 'Please confirm your password'\n    } else if (formData.password !== formData.confirmPassword) {\n      newErrors.confirmPassword = 'Passwords do not match'\n    }
 
-    try {
-      await register(formData.name, formData.email, formData.password, formData.role)
+    setErrors(newErrors)\n    return Object.keys(newErrors).length === 0\n  }
 
-      // Redirect based on role
-      const roleRoute: Record<string, string> = {
-        student: '/student',
-        teacher: '/teacher',
-        parent: '/parent'
-      }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {\n    e.preventDefault()\n    setGeneralError('')
+    setLoadingState('loading')
 
-      navigate(roleRoute[formData.role])
-    } catch (err) {
-      if (err instanceof Error) {
-        setGeneralError(err.message || 'Registration failed. Please try again.')
-      } else {
-        setGeneralError('An unexpected error occurred. Please try again.')
-      }
-    }
-  }
+    if (!validateForm()) {\n      setLoadingState('idle')\n      return\n    }
 
-  return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        {/* Lumio Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-            Lumio
-          </h1>
-          <p className="text-slate-400 text-sm mt-2">ADHD Learning Support Platform</p>
-        </div>
+    try {\n      await register(formData.name, formData.email, formData.password, formData.role)
 
-        {/* Register Form Card */}
-        <div className="bg-slate-800 rounded-lg shadow-xl p-8 border border-slate-700">
-          <h2 className="text-2xl font-bold text-white mb-6">Create Account</h2>
+      const roleRoute: Record<string, string> = {\n        student: '/student/session',\n        teacher: '/teacher/dashboard',\n        parent: '/parent/overview'\n      }
 
-          {/* General Error Message */}
-          {generalError && (
-            <div className="mb-4 p-4 bg-red-900 border border-red-700 rounded-lg">
-              <p className="text-red-200 text-sm">{generalError}</p>
-            </div>
-          )}
+      navigate(roleRoute[formData.role])\n    } catch (err) {\n      if (err instanceof Error) {\n        setGeneralError(err.message || 'Registration failed. Please try again.')\n      } else {\n        setGeneralError('An unexpected error occurred. Please try again.')\n      }\n      setLoadingState('idle')\n    }\n  }
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name Field */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-200 mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                placeholder="John Doe"
-                className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                  errors.name
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-slate-600 focus:border-blue-500 focus:ring-blue-500'
-                }`}
-              />
-              {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
-            </div>
+  const roleName = {\n    student: 'Student',\n    teacher: 'Teacher',\n    parent: 'Parent'\n  }[formData.role]
 
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-200 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                placeholder="you@example.com"
-                className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                  errors.email
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-slate-600 focus:border-blue-500 focus:ring-blue-500'
-                }`}
-              />
-              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
-            </div>
+  return (\n    <div className=\"min-h-screen bg-bg flex items-center justify-center px-6 py-12\">\n      <div className=\"w-full max-w-md\">\n        {/* Header */}\n        <div className=\"text-center mb-12\">\n          <h1 className=\"text-xl font-display font-bold text-ink mb-2\" style={{ fontSize: 'clamp(56px, 10vw, 140px)' }}>\n            LUMIO\n          </h1>\n          <p className=\"text-sm text-muted font-mono\" style={{ letterSpacing: '0.2em', textTransform: 'uppercase' }}>\n            — Create Account\n          </p>\n        </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-200 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                placeholder="••••••••"
-                className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                  errors.password
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-slate-600 focus:border-blue-500 focus:ring-blue-500'
-                }`}
-              />
-              {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
-            </div>
+        {/* Form Card */}\n        <div className=\"bg-surface border border-border p-12 mb-8\">\n          {/* General Error Message */}\n          {generalError && (\n            <div className=\"mb-8 p-4 bg-red-50 border-[1.5px] border-red-600\">\n              <p className=\"text-red-600 text-sm font-mono\">{generalError}</p>\n            </div>\n          )}
 
-            {/* Confirm Password Field */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-200 mb-2">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                placeholder="••••••••"
-                className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                  errors.confirmPassword
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-slate-600 focus:border-blue-500 focus:ring-blue-500'
-                }`}
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>
-              )}
-            </div>
+          <form onSubmit={handleSubmit} className=\"space-y-6\">\n            {/* Full Name Field */}\n            <div>\n              <label htmlFor=\"name\" className=\"form-label\">\n                Full Name\n              </label>\n              <input\n                type=\"text\"\n                id=\"name\"\n                name=\"name\"\n                value={formData.name}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"John Doe\"\n                className={`input-field ${\n                  errors.name ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.name && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.name}</p>\n              )}\n            </div>
 
-            {/* Role Selector */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-slate-200 mb-2">
-                I am a...
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
-              >
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="parent">Parent</option>
-              </select>
-            </div>
+            {/* Email Field */}\n            <div>\n              <label htmlFor=\"email\" className=\"form-label\">\n                Email\n              </label>\n              <input\n                type=\"email\"\n                id=\"email\"\n                name=\"email\"\n                value={formData.email}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"name@example.com\"\n                className={`input-field ${\n                  errors.email ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.email && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.email}</p>\n              )}\n            </div>
 
-            {/* Register Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-700 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition duration-200 transform hover:scale-105 disabled:scale-100 mt-6"
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Creating account...
-                </span>
-              ) : (
-                'Create Account'
-              )}
-            </button>
-          </form>
+            {/* Password Field */}\n            <div>\n              <label htmlFor=\"password\" className=\"form-label\">\n                Password\n              </label>\n              <input\n                type=\"password\"\n                id=\"password\"\n                name=\"password\"\n                value={formData.password}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"••••••••\"\n                className={`input-field ${\n                  errors.password ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.password && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.password}</p>\n              )}\n            </div>
 
-          {/* Login Link */}
-          <p className="text-center text-slate-400 text-sm mt-6">
-            Already have an account?{' '}
-            <a href="/login" className="text-blue-400 hover:text-blue-300 font-medium transition">
-              Sign In
-            </a>
-          </p>
-        </div>
+            {/* Confirm Password Field */}\n            <div>\n              <label htmlFor=\"confirmPassword\" className=\"form-label\">\n                Confirm Password\n              </label>\n              <input\n                type=\"password\"\n                id=\"confirmPassword\"\n                name=\"confirmPassword\"\n                value={formData.confirmPassword}\n                onChange={handleInputChange}\n                disabled={loadingState === 'loading'}\n                placeholder=\"••••••••\"\n                className={`input-field ${\n                  errors.confirmPassword ? 'border-red-600' : ''\n                }`}\n              />\n              {errors.confirmPassword && (\n                <p className=\"text-red-600 text-xs mt-2 font-mono\">{errors.confirmPassword}</p>\n              )}\n            </div>
 
-        {/* Footer Info */}
-        <div className="mt-8 text-center text-slate-500 text-xs">
-          <p>© 2024 Lumio Platform. All rights reserved.</p>
-        </div>
-      </div>
-    </div>
-  )
-}
+            {/* Create Account Button */}\n            <button\n              type=\"submit\"\n              disabled={loadingState === 'loading'}\n              className=\"btn-accent w-full\"\n            >\n              {loadingState === 'loading' ? 'Creating account...' : 'Create Account'}\n            </button>\n          </form>
+
+          {/* Login Link */}\n          <p className=\"text-center text-muted text-sm font-mono mt-8\" style={{ letterSpacing: '0.02em' }}>\n            Already registered?{' '}\n            <a\n              href={`/login?role=${formData.role}`}\n              className=\"text-accent hover:underline font-bold transition-colors\"\n            >\n              Sign In\n            </a>\n          </p>\n        </div>
+
+        {/* Footer */}\n        <div className=\"text-center text-muted text-xs font-mono\" style={{ letterSpacing: '0.15em', textTransform: 'uppercase' }}>\n          <p>© 2026 Lumio — by Unblur</p>\n        </div>\n      </div>\n    </div>\n  )\n}
 
 export default RegisterPage

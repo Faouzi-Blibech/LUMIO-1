@@ -7,21 +7,19 @@ interface StudentCardProps {
 }
 
 export const StudentCard: React.FC<StudentCardProps> = ({ student }) => {
-  // Determine risk tier badge color
   const riskBadgeStyle = useMemo(() => {
     switch (student.risk_tier) {
       case 'low':
-        return { bg: 'bg-green-900/30', border: 'border-green-600', text: 'text-green-300' }
+        return { bg: 'bg-green-50', border: 'border-green-600', text: 'text-green-600' }
       case 'moderate':
-        return { bg: 'bg-amber-900/30', border: 'border-amber-600', text: 'text-amber-300' }
+        return { bg: 'bg-yellow-50', border: 'border-yellow-600', text: 'text-yellow-600' }
       case 'needs_attention':
-        return { bg: 'bg-red-900/30', border: 'border-red-600', text: 'text-red-300' }
+        return { bg: 'bg-red-50', border: 'border-red-600', text: 'text-red-600' }
       default:
-        return { bg: 'bg-slate-900/30', border: 'border-slate-600', text: 'text-slate-300' }
+        return { bg: 'bg-surface', border: 'border-border', text: 'text-ink' }
     }
   }, [student.risk_tier])
 
-  // Format last updated time (refresh every second for accurate display)
   const [formattedTime, setFormattedTime] = useState('just now')
 
   useEffect(() => {
@@ -42,19 +40,20 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student }) => {
   }, [student.updated_at])
 
   return (
-    <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-slate-600 transition shadow-lg hover:shadow-xl">
+    <div className="bg-surface border-[1.5px] border-border p-6 hover:border-ink transition" style={{ borderRadius: '12px' }}>
       {/* Student name */}
-      <h3 className="text-white font-semibold text-lg mb-3 truncate">{student.student_name}</h3>
+      <h3 className="text-ink font-display font-bold text-md mb-4 truncate" style={{ fontSize: 'clamp(22px, 3vw, 28px)' }}>{student.student_name}</h3>
 
       {/* Focus bar */}
-      <div className="mb-4">
+      <div className="mb-6">
         <FocusBar focusScore={student.focus_score} causeLabel={student.distraction_cause} />
       </div>
 
       {/* Risk tier badge */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <span
-          className={`text-xs font-semibold px-3 py-1 rounded-full border ${riskBadgeStyle.bg} ${riskBadgeStyle.border} ${riskBadgeStyle.text}`}
+          className={`text-xs font-mono font-bold px-4 py-2 rounded-full border-[1.5px] ${riskBadgeStyle.bg} ${riskBadgeStyle.border} ${riskBadgeStyle.text}`}
+          style={{ letterSpacing: '0.15em', textTransform: 'uppercase' }}
         >
           {student.risk_tier === 'low'
             ? 'Low Risk'
@@ -64,17 +63,17 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student }) => {
         </span>
       </div>
 
-      {/* Cause label - only show if present */}
+      {/* Cause label */}
       {student.distraction_cause && (
-        <div className="mb-3 flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-          <span className="text-xs text-slate-400">{student.distraction_cause}</span>
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-accent text-sm">✦</span>
+          <span className="text-xs text-muted font-mono">{student.distraction_cause}</span>
         </div>
       )}
 
-      {/* Last updated timestamp */}
-      <div className="text-xs text-slate-500 flex items-center justify-between pt-3 border-t border-slate-700">
-        <span>Updated</span>
+      {/* Timestamp */}
+      <div className="text-xs text-muted font-mono flex items-center justify-between pt-4 border-t border-border" style={{ letterSpacing: '0.1em' }}>
+        <span>UPDATED</span>
         <span>{formattedTime}</span>
       </div>
     </div>

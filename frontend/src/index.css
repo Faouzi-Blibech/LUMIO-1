@@ -1,39 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Syne+Mono&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 @layer base {
-  body {
-    @apply bg-white text-gray-900 antialiased;
+  :root {
+    --bg: #f5f4f0;
+    --ink: #1a1a1a;
+    --accent: #ff5c00;
+    --muted: #999999;
+    --surface: #eeecea;
+    --border: rgba(26, 26, 26, 0.10);
   }
 
   html {
     scroll-behavior: smooth;
+    cursor: none;
+  }
+
+  body {
+    @apply bg-bg text-ink antialiased;
+    font-family: 'Syne Mono', monospace;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  #cursor {
+    pointer-events: none;
+    position: fixed;
+    z-index: 999;
+    width: 12px;
+    height: 12px;
+    background: var(--ink);
+    border-radius: 50%;
+    mix-blend-mode: multiply;
+    will-change: transform;
+  }
+
+  #cursor.hover {
+    width: 60px;
+    height: 60px;
+    background: rgba(26, 26, 26, 0.08);
+    border: 1.5px solid var(--ink);
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply px-10 py-[17px] border-[1.5px] border-border bg-transparent text-ink font-bold rounded-full;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  .btn-secondary {
-    @apply px-4 py-2 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  .btn-primary:hover:not(:disabled) {
+    @apply bg-ink text-bg border-ink transform -translate-y-[3px];
   }
 
-  .btn-danger {
-    @apply px-4 py-2 bg-danger-600 text-white font-medium rounded-lg hover:bg-danger-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .btn-accent {
+    @apply px-10 py-[17px] border-[1.5px] border-border bg-transparent text-ink font-bold rounded-full;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .btn-accent:hover:not(:disabled) {
+    @apply bg-accent text-bg border-accent transform -translate-y-[3px];
+  }
+
+  .btn-accent:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .btn-destructive {
+    @apply px-10 py-[17px] border-[1.5px] border-red-600 bg-transparent text-red-600 font-bold rounded-full;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .btn-destructive:hover:not(:disabled) {
+    @apply bg-red-600 text-bg border-red-600 transform -translate-y-[3px];
+  }
+
+  .btn-destructive:disabled {
+    @apply opacity-50 cursor-not-allowed;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-100;
+    @apply bg-surface border border-border rounded-none p-12;
   }
 
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-5 py-[14px] bg-surface border-[1.5px] border-border rounded-xl text-ink;
+    font-family: 'Syne Mono', monospace;
+    font-size: 14px;
+  }
+
+  .input-field::placeholder {
+    @apply text-muted;
+  }
+
+  .input-field:focus {
+    @apply outline-none border-ink;
   }
 
   .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-2;
+    @apply block text-accent font-mono text-xs font-normal mb-2;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .form-label::before {
+    content: '— ';
+  }
+
+  .badge {
+    @apply bg-ink text-bg rounded-full px-3 py-1;
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .badge-outline {
+    @apply bg-transparent border border-border text-muted rounded-full px-3 py-1;
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    @apply border-t border-border;
+  }
+
+  .section-marker {
+    @apply text-accent;
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .section-marker::before {
+    content: '— ';
+    margin-right: 0.25em;
+  }
+
+  .glyph-accent::before {
+    content: '✦';
+    margin-right: 0.5em;
   }
 }

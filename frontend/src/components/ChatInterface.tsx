@@ -29,7 +29,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
   const inputRef = useRef<HTMLInputElement>(null)
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({})
 
-  // Register suggestion fill callback on mount
   useEffect(() => {
     if (onSuggestFill) {
       onSuggestFill((text: string) => {
@@ -39,13 +38,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
     }
   }, [onSuggestFill])
 
-  // Send message - use latest input value from state
   const handleSendMessage = useCallback(
     async (messageText?: string) => {
       const textToSend = messageText !== undefined ? messageText : inputValue.trim()
       if (!textToSend) return
 
-      // Add user message
       const userMessage: Message = {
         id: `msg-${Date.now()}`,
         role: 'user',
@@ -84,7 +81,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
     [inputValue, endpoint, studentId]
   )
 
-  // Handle Enter key
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -92,7 +88,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
     }
   }
 
-  // Toggle sources expansion
   const toggleSources = (messageId: string) => {
     setExpandedSources((prev) => ({
       ...prev,
@@ -100,7 +95,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
     }))
   }
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -108,14 +102,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
   }, [messages])
 
   return (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col h-full bg-bg">
       {/* Messages list */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-slate-400">
-            <p className="text-center">
-              Start a conversation about your class or a specific student
-            </p>
+          <div className="flex items-center justify-center h-full text-muted">
+            <p className="text-center font-mono text-sm">Start a conversation about your class or a specific student</p>
           </div>
         ) : (
           messages.map((message) => (
@@ -124,36 +116,38 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
               <div
                 className={`flex ${
                   message.role === 'user' ? 'justify-end' : 'justify-start'
-                } mb-2`}
+                } mb-3`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-2xl ${
+                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-6 py-4 border-[1.5px] ${
                     message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-700 text-white'
+                      ? 'bg-accent border-accent text-bg'
+                      : 'bg-surface border-border text-ink'
                   }`}
+                  style={{ borderRadius: '12px' }}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-sm font-mono whitespace-pre-wrap">{message.content}</p>
                 </div>
               </div>
 
-              {/* Sources section for assistant messages */}
+              {/* Sources section */}
               {message.role === 'assistant' && message.sources && message.sources.length > 0 && (
                 <div className="flex justify-start mb-4">
                   <div className="max-w-xs lg:max-w-md xl:max-w-lg">
                     <button
                       onClick={() => toggleSources(message.id)}
-                      className="text-xs text-teal-400 hover:text-teal-300 font-medium flex items-center gap-1"
+                      className="text-xs text-accent hover:text-accent/80 font-mono font-bold flex items-center gap-2 transition"
+                      style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}
                     >
                       <span>{expandedSources[message.id] ? '▼' : '▶'}</span>
                       Sources ({message.sources.length})
                     </button>
 
                     {expandedSources[message.id] && (
-                      <div className="mt-2 space-y-1 pl-4 border-l border-teal-600">
+                      <div className="mt-3 space-y-2 pl-4 border-l-[1.5px] border-border">
                         {message.sources.map((source, idx) => (
-                          <p key={idx} className="text-xs text-teal-400">
-                            • {source}
+                          <p key={idx} className="text-xs text-muted font-mono">
+                            ✦ {source}
                           </p>
                         ))}
                       </div>
@@ -168,11 +162,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
         {/* Loading state */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-slate-700 rounded-2xl px-4 py-2">
-              <div className="flex gap-2">
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100"></div>
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200"></div>
+            <div className="bg-surface border-[1.5px] border-border px-6 py-4" style={{ borderRadius: '12px' }}>
+              <div className="flex gap-3">
+                <div className="w-2 h-2 bg-ink rounded-full" style={{ animation: 'pulse 0.7s infinite' }}></div>
+                <div className="w-2 h-2 bg-ink rounded-full" style={{ animation: 'pulse 0.7s infinite 0.1s' }}></div>
+                <div className="w-2 h-2 bg-ink rounded-full" style={{ animation: 'pulse 0.7s infinite 0.2s' }}></div>
               </div>
             </div>
           </div>
@@ -180,8 +174,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-900/30 border border-red-600 rounded-lg p-3">
-            <p className="text-xs text-red-300">{error}</p>
+          <div className="bg-red-50 border-[1.5px] border-red-600 p-4">
+            <p className="text-xs text-red-600 font-mono">{error}</p>
           </div>
         )}
 
@@ -189,31 +183,24 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentI
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-slate-700 bg-slate-800 p-4">
-        <div className="flex gap-2">
+      <div className="border-t border-border bg-surface p-6">
+        <div className="flex gap-4">
           <input
             ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about teaching or your students..."
+            placeholder="Ask me anything..."
             disabled={isLoading}
-            className="flex-1 px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="input-field flex-1"
           />
           <button
             onClick={() => handleSendMessage()}
             disabled={isLoading || !inputValue.trim()}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="btn-accent whitespace-nowrap"
           >
-            {isLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-blue-300 border-t-white rounded-full animate-spin"></div>
-                <span>Sending...</span>
-              </>
-            ) : (
-              'Send'
-            )}
+            {isLoading ? 'Sending...' : 'Send'}
           </button>
         </div>
       </div>
