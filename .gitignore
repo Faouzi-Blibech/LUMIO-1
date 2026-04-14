@@ -34,6 +34,8 @@ frontend/build_output.txt
 frontend/tsc_errors.txt
 frontend/.vite/
 .next/
+frontend\front-sources
+
 
 # Docker volumes
 postgres_data/

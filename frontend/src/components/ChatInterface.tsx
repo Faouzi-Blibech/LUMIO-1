@@ -1,211 +1,189 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { apiClient } from '../lib/api'
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Send, X, Bot, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  sources?: string[]
-  timestamp: number
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
 }
 
-interface RagResponse {
-  answer: string
-  sources: string[]
-}
+const sampleResponses = [
+  "Based on your recent sessions, your focus tends to peak between 10-11 AM. Try scheduling your hardest subjects during that window! 📚",
+  "I noticed you had a great study streak this week — 4 sessions with 80%+ focus! Keep it up, and you'll earn the **Focus Champion** badge soon. 🏆",
+  "Here's a tip: Try the Pomodoro technique — 25 minutes of focused study followed by a 5-minute break. It works well for maintaining attention. ⏱️",
+  "Your distraction patterns show that **fatigue** is the most common cause. Consider getting 8+ hours of sleep and taking short movement breaks between sessions. 💪",
+  "Great question! Your average focus this week was **82%**, which is a 5% improvement from last week. You're on a positive trend! 📈",
+];
 
 interface ChatInterfaceProps {
-  endpoint: string
-  studentId?: string
-  onSuggestFill?: (callback: (text: string) => void) => void
+  onClose: () => void;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ endpoint, studentId, onSuggestFill }) => {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string>('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({})
-
-  useEffect(() => {
-    if (onSuggestFill) {
-      onSuggestFill((text: string) => {
-        setInputValue(text)
-        setTimeout(() => inputRef.current?.focus(), 0)
-      })
-    }
-  }, [onSuggestFill])
-
-  const handleSendMessage = useCallback(
-    async (messageText?: string) => {
-      const textToSend = messageText !== undefined ? messageText : inputValue.trim()
-      if (!textToSend) return
-
-      const userMessage: Message = {
-        id: `msg-${Date.now()}`,
-        role: 'user',
-        content: textToSend,
-        timestamp: Date.now()
-      }
-
-      setMessages((prev) => [...prev, userMessage])
-      if (messageText === undefined) setInputValue('')
-      setError('')
-      setIsLoading(true)
-
-      try {
-        const response = await apiClient.post<RagResponse>(endpoint, {
-          message: textToSend,
-          student_id: studentId
-        })
-
-        const assistantMessage: Message = {
-          id: `msg-${Date.now()}-response`,
-          role: 'assistant',
-          content: response.data.answer,
-          sources: response.data.sources || [],
-          timestamp: Date.now()
-        }
-
-        setMessages((prev) => [...prev, assistantMessage])
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to send message'
-        setError(errorMsg)
-        console.error('Chat error:', err)
-      } finally {
-        setIsLoading(false)
-      }
+export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 0,
+      role: "assistant",
+      content: "Hi there! 👋 I'm LUMIO, your AI study companion. Ask me anything about your focus, study tips, or progress!",
+      timestamp: new Date(),
     },
-    [inputValue, endpoint, studentId]
-  )
+  ]);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
-
-  const toggleSources = (messageId: string) => {
-    setExpandedSources((prev) => ({
-      ...prev,
-      [messageId]: !prev[messageId]
-    }))
-  }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+
+    const userMsg: Message = {
+      id: messages.length,
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setIsTyping(true);
+
+    // Simulate AI response
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 0)
-  }, [messages])
+      const response = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+      const assistantMsg: Message = {
+        id: messages.length + 1,
+        role: "assistant",
+        content: response,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMsg]);
+      setIsTyping(false);
+    }, 1200 + Math.random() * 800);
+  };
 
   return (
-    <div className="flex flex-col h-full bg-bg">
-      {/* Messages list */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted">
-            <p className="text-center font-mono text-sm">Start a conversation about your class or a specific student</p>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-primary flex items-center justify-center">
+            <img
+              src="/assets/Logos/logo icon/lumio icon white.png"
+              alt="LUMIO"
+              className="w-5 h-5 object-contain"
+            />
           </div>
-        ) : (
-          messages.map((message) => (
-            <div key={message.id}>
-              {/* Message bubble */}
+          <div>
+            <h3 className="font-heading font-bold text-sm text-foreground">LUMIO AI</h3>
+            <p className="text-[11px] text-muted-foreground font-body flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+              Online
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-xl hover:bg-muted/50 text-muted-foreground transition-colors"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <AnimatePresence>
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+            >
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                msg.role === "assistant"
+                  ? "bg-primary/10"
+                  : "bg-secondary/10"
+              }`}>
+                {msg.role === "assistant" ? (
+                  <Bot size={14} className="text-primary" />
+                ) : (
+                  <User size={14} className="text-secondary" />
+                )}
+              </div>
               <div
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                } mb-3`}
+                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm font-body leading-relaxed ${
+                  msg.role === "assistant"
+                    ? "bg-muted/30 text-foreground rounded-tl-md"
+                    : "bg-primary text-primary-foreground rounded-tr-md"
+                }`}
               >
-                <div
-                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-6 py-4 border-[1.5px] ${
-                    message.role === 'user'
-                      ? 'bg-accent border-accent text-bg'
-                      : 'bg-surface border-border text-ink'
-                  }`}
-                  style={{ borderRadius: '12px' }}
-                >
-                  <p className="text-sm font-mono whitespace-pre-wrap">{message.content}</p>
-                </div>
+                {msg.content}
               </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
-              {/* Sources section */}
-              {message.role === 'assistant' && message.sources && message.sources.length > 0 && (
-                <div className="flex justify-start mb-4">
-                  <div className="max-w-xs lg:max-w-md xl:max-w-lg">
-                    <button
-                      onClick={() => toggleSources(message.id)}
-                      className="text-xs text-accent hover:text-accent/80 font-mono font-bold flex items-center gap-2 transition"
-                      style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}
-                    >
-                      <span>{expandedSources[message.id] ? '▼' : '▶'}</span>
-                      Sources ({message.sources.length})
-                    </button>
-
-                    {expandedSources[message.id] && (
-                      <div className="mt-3 space-y-2 pl-4 border-l-[1.5px] border-border">
-                        {message.sources.map((source, idx) => (
-                          <p key={idx} className="text-xs text-muted font-mono">
-                            ✦ {source}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+        {/* Typing indicator */}
+        {isTyping && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex gap-2.5"
+          >
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Bot size={14} className="text-primary" />
             </div>
-          ))
-        )}
-
-        {/* Loading state */}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-surface border-[1.5px] border-border px-6 py-4" style={{ borderRadius: '12px' }}>
-              <div className="flex gap-3">
-                <div className="w-2 h-2 bg-ink rounded-full" style={{ animation: 'pulse 0.7s infinite' }}></div>
-                <div className="w-2 h-2 bg-ink rounded-full" style={{ animation: 'pulse 0.7s infinite 0.1s' }}></div>
-                <div className="w-2 h-2 bg-ink rounded-full" style={{ animation: 'pulse 0.7s infinite 0.2s' }}></div>
-              </div>
+            <div className="bg-muted/30 rounded-2xl rounded-tl-md px-4 py-3 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }} />
             </div>
-          </div>
-        )}
-
-        {/* Error message */}
-        {error && (
-          <div className="bg-red-50 border-[1.5px] border-red-600 p-4">
-            <p className="text-xs text-red-600 font-mono">{error}</p>
-          </div>
+          </motion.div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input bar */}
-      <div className="border-t border-border bg-surface p-6">
-        <div className="flex gap-4">
+      {/* Input */}
+      <div className="px-5 py-4 border-t border-border">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="flex items-center gap-2"
+        >
           <input
-            ref={inputRef}
             type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me anything..."
-            disabled={isLoading}
-            className="input-field flex-1"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask LUMIO anything..."
+            className="flex-1 h-10 px-4 rounded-xl bg-muted/30 border border-border text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
           />
-          <button
-            onClick={() => handleSendMessage()}
-            disabled={isLoading || !inputValue.trim()}
-            className="btn-accent whitespace-nowrap"
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!input.trim()}
+            className="h-10 w-10 rounded-xl bg-gradient-primary hover:opacity-90 disabled:opacity-40"
           >
-            {isLoading ? 'Sending...' : 'Send'}
-          </button>
-        </div>
+            <Send size={16} />
+          </Button>
+        </form>
+        <p className="text-[10px] text-muted-foreground/60 font-body text-center mt-2">
+          LUMIO is an AI assistant — responses are for educational support only.
+        </p>
       </div>
     </div>
-  )
-}
-
-export default ChatInterface
+  );
+};
