@@ -91,7 +91,9 @@ const StudentDetail = () => {
                     <span className="text-xs font-heading font-bold text-muted-foreground">{d.pct}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                    <div className="h-full rounded-full bg-primary/70" style={{ width: `${d.pct}%` }} />
+                    <div className={`h-full rounded-full ${
+                        d.pct >= 30 ? "bg-destructive" : d.pct >= 20 ? "bg-warning" : "bg-success"
+                      }`} style={{ width: `${d.pct}%` }} />
                   </div>
                 </div>
               ))}

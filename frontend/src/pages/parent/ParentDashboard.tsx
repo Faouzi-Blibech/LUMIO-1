@@ -154,11 +154,18 @@ const ParentDashboard = () => {
                   <td className="px-6 py-3.5 text-sm font-body text-muted-foreground">{s.date}</td>
                   <td className="px-6 py-3.5 text-sm font-body text-muted-foreground">{s.duration}</td>
                   <td className="px-6 py-3.5">
-                    <span className={`text-sm font-heading font-bold ${
-                      s.focus >= 80 ? "text-success" : s.focus >= 60 ? "text-warning" : "text-destructive"
-                    }`}>
-                      {s.focus}%
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                        <div className={`h-full rounded-full ${
+                          s.focus >= 80 ? "bg-success" : s.focus >= 60 ? "bg-warning" : "bg-destructive"
+                        }`} style={{ width: `${s.focus}%` }} />
+                      </div>
+                      <span className={`text-sm font-heading font-bold ${
+                        s.focus >= 80 ? "text-success" : s.focus >= 60 ? "text-warning" : "text-destructive"
+                      }`}>
+                        {s.focus}%
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ))}

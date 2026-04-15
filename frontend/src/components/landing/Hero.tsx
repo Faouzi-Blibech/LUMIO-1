@@ -31,15 +31,15 @@ export function Hero() {
         <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-primary/3 blur-[100px]" />
       </div>
 
-      {/* Full-section blur overlay — fades on scroll */}
+      {/* Full-section blur overlay — lighter, fades on scroll */}
       <motion.div
         className="fixed inset-0 z-30 pointer-events-none"
         style={{
           opacity: blurOpacity,
-          backdropFilter: "blur(22px)",
-          WebkitBackdropFilter: "blur(22px)",
-          maskImage: `radial-gradient(circle 160px at ${mouse.x} ${mouse.y}, transparent 0%, rgba(0,0,0,0.15) 40%, black 100%)`,
-          WebkitMaskImage: `radial-gradient(circle 160px at ${mouse.x} ${mouse.y}, transparent 0%, rgba(0,0,0,0.15) 40%, black 100%)`,
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          maskImage: `radial-gradient(circle 180px at ${mouse.x} ${mouse.y}, transparent 0%, rgba(0,0,0,0.08) 50%, black 100%)`,
+          WebkitMaskImage: `radial-gradient(circle 180px at ${mouse.x} ${mouse.y}, transparent 0%, rgba(0,0,0,0.08) 50%, black 100%)`,
         }}
       />
 

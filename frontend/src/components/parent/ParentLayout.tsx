@@ -63,7 +63,7 @@ export const ParentLayout = ({ children }: ParentLayoutProps) => {
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              className="p-2 rounded-xl hover:bg-destructive/15 text-muted-foreground hover:text-destructive hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-300"
               title="Sign out"
             >
               <LogOut size={16} />

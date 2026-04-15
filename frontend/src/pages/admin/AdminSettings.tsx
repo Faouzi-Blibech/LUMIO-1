@@ -218,7 +218,7 @@ const AdminSettings = () => {
           <Button variant="outline" className="rounded-xl">
             Change Password
           </Button>
-          <Button variant="destructive" className="rounded-xl">
+          <Button variant="destructive" className="rounded-xl hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-300">
             <LogOut size={14} className="mr-1.5" /> Sign Out
           </Button>
         </motion.div>

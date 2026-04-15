@@ -1,3 +1,6 @@
+/* ==========================================================================
+   Typography Imports
+   ========================================================================== */
 @font-face {
   font-family: 'Montserrat';
   src: url('/assets/fonts/Montserrat-SemiBold.ttf') format('truetype');
@@ -26,48 +29,57 @@
   font-style: normal;
 }
 
+/* ==========================================================================
+   Tailwind Directives
+   ========================================================================== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Theme Core Variables
+   ========================================================================== */
 @layer base {
   :root {
+    /* --- Base Colors --- */
     --background: 210 20% 98%;
     --foreground: 200 29% 18%;
 
+    /* --- UI Element Colors --- */
     --card: 0 0% 100%;
     --card-foreground: 200 29% 18%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 200 29% 18%;
 
+    /* --- Theme Core Colors --- */
     --primary: 241 44% 42%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 216 52% 55%;
     --secondary-foreground: 0 0% 100%;
-
+    --accent: 199 24% 80%;
+    --accent-foreground: 200 29% 18%;
     --muted: 200 18% 90%;
     --muted-foreground: 240 8% 50%;
 
-    --accent: 199 24% 80%;
-    --accent-foreground: 200 29% 18%;
-
+    /* --- State Colors --- */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --success: 142 72% 42%;
     --success-foreground: 0 0% 100%;
-
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
+    /* --- Forms & Interactive Elements --- */
     --border: 214 20% 92%;
     --input: 214 20% 92%;
     --ring: 241 44% 42%;
 
+    /* --- General Settings --- */
     --radius: 1.25rem;
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Lexend', sans-serif;
 
+    /* --- Sidebar Colors --- */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 241 44% 42%;
@@ -77,37 +89,48 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 241 44% 42%;
 
-    --font-heading: 'Montserrat', sans-serif;
-    --font-body: 'Lexend', sans-serif;
-
+    /* --- Gradients --- */
     --gradient-primary: linear-gradient(135deg, hsl(241 44% 42%), hsl(216 52% 55%));
     --gradient-hero: linear-gradient(160deg, hsl(241 44% 42% / 0.03), hsl(216 52% 55% / 0.08));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 20% 98%));
+    
+    /* --- Shadows --- */
     --shadow-soft: 0 2px 20px -4px hsl(241 44% 42% / 0.08);
     --shadow-card: 0 4px 32px -8px hsl(241 44% 42% / 0.10);
     --shadow-elevated: 0 12px 48px -12px hsl(241 44% 42% / 0.15);
   }
 
   .dark {
+    /* --- Base Colors --- */
     --background: 220 20% 8%;
     --foreground: 210 20% 95%;
+
+    /* --- UI Element Colors --- */
     --card: 220 20% 11%;
     --card-foreground: 210 20% 95%;
     --popover: 220 20% 11%;
     --popover-foreground: 210 20% 95%;
+
+    /* --- Theme Core Colors --- */
     --primary: 241 50% 60%;
     --primary-foreground: 0 0% 100%;
     --secondary: 216 52% 55%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 220 15% 18%;
-    --muted-foreground: 215 15% 60%;
     --accent: 220 15% 18%;
     --accent-foreground: 210 20% 95%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 215 15% 60%;
+
+    /* --- State Colors --- */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+
+    /* --- Forms & Interactive Elements --- */
     --border: 220 15% 18%;
     --input: 220 15% 18%;
     --ring: 241 50% 60%;
+
+    /* --- Sidebar Colors --- */
     --sidebar-background: 220 20% 8%;
     --sidebar-foreground: 210 20% 95%;
     --sidebar-primary: 241 50% 60%;
@@ -119,6 +142,9 @@
   }
 }
 
+/* ==========================================================================
+   Base Elements Resets
+   ========================================================================== */
 @layer base {
   * {
     border-color: hsl(var(--border));
@@ -135,7 +161,11 @@
   }
 }
 
+/* ==========================================================================
+   Custom Utility Classes
+   ========================================================================== */
 @layer utilities {
+  /* --- Gradients --- */
   .text-gradient {
     -webkit-background-clip: text;
     background-clip: text;
@@ -151,6 +181,7 @@
     background-image: var(--gradient-hero);
   }
 
+  /* --- Shadows --- */
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
@@ -163,6 +194,7 @@
     box-shadow: var(--shadow-elevated);
   }
 
+  /* --- Patterns --- */
   .bg-pattern-white {
     background-image: url('/assets/pattern/Pattern lumio white.png');
     background-repeat: repeat;
@@ -176,7 +208,9 @@
   }
 }
 
-/* Custom Animations */
+/* ==========================================================================
+   Keyframes & Animations
+   ========================================================================== */
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -192,6 +226,7 @@
   50% { transform: translateY(-3px); }
 }
 
+/* --- Animation Utilities --- */
 .animate-pulse-soft {
   animation: pulse-soft 3s ease-in-out infinite;
 }

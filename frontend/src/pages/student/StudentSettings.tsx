@@ -1,14 +1,24 @@
 import { motion } from "framer-motion";
-import { ParentLayout } from "@/components/parent/ParentLayout";
+import { StudentLayout } from "@/components/student/StudentLayout";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, Bell, Globe, Shield, LogOut } from "lucide-react";
+import { User, Bell, Globe, Shield, LogOut, Eye } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-const ParentSettings = () => {
+const StudentSettings = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
-    <ParentLayout>
+    <StudentLayout>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -33,16 +43,22 @@ const ParentSettings = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm font-body">Name</Label>
-                <Input defaultValue="Fatma Ben Ali" className="h-11 rounded-xl font-body bg-muted/30" />
+                <Input defaultValue="Ahmed Ben Ali" className="h-11 rounded-xl font-body bg-muted/30" />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-body">Email</Label>
-                <Input defaultValue="fatma.benali@mail.tn" className="h-11 rounded-xl font-body bg-muted/30" />
+                <Input defaultValue="ahmed.benali@student.tn" className="h-11 rounded-xl font-body bg-muted/30" />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-body">Linked Child</Label>
-              <Input defaultValue="Ahmed Ben Ali — 3ème Sciences A" disabled className="h-11 rounded-xl font-body bg-muted/20 text-muted-foreground" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-body">Class</Label>
+                <Input defaultValue="3ème Sciences A" disabled className="h-11 rounded-xl font-body bg-muted/20 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-body">Teacher</Label>
+                <Input defaultValue="Ms. Trabelsi" disabled className="h-11 rounded-xl font-body bg-muted/20 text-muted-foreground" />
+              </div>
             </div>
           </div>
         </motion.div>
@@ -59,9 +75,10 @@ const ParentSettings = () => {
           </h2>
           <div className="space-y-4">
             {[
-              { label: "Session focus alerts", desc: "Get notified when your child's focus drops significantly", default: true },
-              { label: "Weekly progress report", desc: "Receive a weekly email summary of study activity", default: true },
-              { label: "Homework deadline reminders", desc: "Alerts before assignment due dates", default: false },
+              { label: "Session reminders", desc: "Get reminded to start your daily study session", default: true },
+              { label: "Weekly progress report", desc: "Receive a weekly summary of your focus and XP", default: true },
+              { label: "Homework deadline alerts", desc: "Get notified before assignments are due", default: true },
+              { label: "Focus milestone celebrations", desc: "Celebrate when you hit focus streaks", default: false },
             ].map((pref) => (
               <div key={pref.label} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/20 transition-colors">
                 <div>
@@ -87,14 +104,23 @@ const ParentSettings = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/20 transition-colors">
               <div>
-                <p className="text-sm font-body font-medium text-foreground">Data sharing consent</p>
-                <p className="text-xs text-muted-foreground font-body">Allow Lumio to share anonymized data for research</p>
+                <p className="text-sm font-body font-medium text-foreground flex items-center gap-1.5">
+                  <Eye size={13} /> Dashboard visibility
+                </p>
+                <p className="text-xs text-muted-foreground font-body">Allow your parent to view your dashboard</p>
               </div>
-              <Switch defaultChecked={false} />
+              <Switch defaultChecked={true} />
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/20 transition-colors">
+              <div>
+                <p className="text-sm font-body font-medium text-foreground">Share focus data with teacher</p>
+                <p className="text-xs text-muted-foreground font-body">Your teacher sees your live focus during sessions</p>
+              </div>
+              <Switch defaultChecked={true} />
             </div>
             <div className="p-3 rounded-xl bg-muted/20">
               <p className="text-xs text-muted-foreground font-body">
-                <strong className="text-foreground">Note:</strong> If your child is 14–15 years old, they can control dashboard visibility from their own settings.
+                <strong className="text-foreground">Note:</strong> If you are 14–15 years old, you may control dashboard visibility. Your parent can always override this setting.
               </p>
             </div>
           </div>
@@ -131,18 +157,22 @@ const ParentSettings = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="flex gap-3"
+          className="flex gap-3 pb-8"
         >
           <Button variant="outline" className="rounded-xl">
             Change Password
           </Button>
-          <Button variant="destructive" className="rounded-xl hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-300">
+          <Button
+            variant="destructive"
+            className="rounded-xl hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-300"
+            onClick={handleSignOut}
+          >
             <LogOut size={14} className="mr-1.5" /> Sign Out
           </Button>
         </motion.div>
       </div>
-    </ParentLayout>
+    </StudentLayout>
   );
 };
 
-export default ParentSettings;
+export default StudentSettings;

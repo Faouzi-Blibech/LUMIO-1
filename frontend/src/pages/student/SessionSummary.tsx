@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { StudentLayout } from "@/components/student/StudentLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Zap, Clock, Target, Brain, TrendingUp, Home } from "lucide-react";
+import { Zap, Clock, Target, Brain, TrendingUp, Home, CheckCircle2, Sparkles } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine
 } from "recharts";
@@ -23,29 +23,54 @@ const SessionSummary = () => {
   const duration = "30 min";
   const xpEarned = 85;
 
+  const getFocusMessage = (focus: number) => {
+    if (focus >= 85) return { text: "Outstanding focus! You're in the zone 🔥", color: "text-success" };
+    if (focus >= 70) return { text: "Great job! Your concentration is strong 💪", color: "text-success" };
+    if (focus >= 55) return { text: "Good effort! A few more tweaks and you'll improve 📈", color: "text-warning" };
+    return { text: "Keep going! Every session builds your focus muscle 🧠", color: "text-primary" };
+  };
+
+  const focusMessage = getFocusMessage(avgFocus);
+
   return (
     <StudentLayout>
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+        {/* Header with celebration */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
+          className="text-center mb-6"
         >
-          <h1 className="font-heading font-extrabold text-3xl text-foreground mb-2">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+            className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-5"
+          >
+            <CheckCircle2 size={40} className="text-success" />
+          </motion.div>
+          <h1 className="font-heading font-extrabold text-4xl text-foreground mb-3">
             Session Complete! 🎉
           </h1>
-          <p className="text-muted-foreground font-body">
+          <p className="text-muted-foreground font-body text-base">
             Mathematics · Today at 10:30 AM
           </p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className={`mt-3 font-heading font-bold text-lg ${focusMessage.color}`}
+          >
+            {focusMessage.text}
+          </motion.p>
         </motion.div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { icon: Target, label: "Avg Focus", value: `${avgFocus}%`, color: "text-primary" },
-            { icon: Clock, label: "Duration", value: duration, color: "text-secondary" },
-            { icon: Zap, label: "XP Earned", value: `+${xpEarned}`, color: "text-success" },
+            { icon: Target, label: "Avg Focus", value: `${avgFocus}%`, color: "text-primary", bg: "bg-primary/8" },
+            { icon: Clock, label: "Duration", value: duration, color: "text-secondary", bg: "bg-secondary/8" },
+            { icon: Zap, label: "XP Earned", value: `+${xpEarned}`, color: "text-success", bg: "bg-success/8" },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -54,9 +79,11 @@ const SessionSummary = () => {
               transition={{ delay: 0.1 + i * 0.1 }}
               className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft text-center"
             >
-              <stat.icon size={20} className={`${stat.color} mx-auto mb-2`} />
-              <p className="font-heading font-extrabold text-2xl text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground font-body mt-1">{stat.label}</p>
+              <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center mx-auto mb-3`}>
+                <stat.icon size={22} className={stat.color} />
+              </div>
+              <p className="font-heading font-extrabold text-3xl text-foreground">{stat.value}</p>
+              <p className="text-sm text-muted-foreground font-body mt-1">{stat.label}</p>
             </motion.div>
           ))}
         </div>
@@ -68,10 +95,10 @@ const SessionSummary = () => {
           transition={{ delay: 0.3 }}
           className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft mb-8"
         >
-          <h2 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
-            <TrendingUp size={16} className="text-primary" /> Focus Timeline
+          <h2 className="font-heading font-bold text-lg text-foreground mb-4 flex items-center gap-2">
+            <TrendingUp size={18} className="text-primary" /> Focus Timeline
           </h2>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={timelineData}>
               <defs>
                 <linearGradient id="summaryGrad" x1="0" y1="0" x2="0" y2="1">
@@ -95,14 +122,25 @@ const SessionSummary = () => {
           transition={{ delay: 0.4 }}
           className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft mb-8"
         >
-          <h2 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
-            <Brain size={16} className="text-primary" /> AI Insights
+          <h2 className="font-heading font-bold text-lg text-foreground mb-5 flex items-center gap-2">
+            <Sparkles size={18} className="text-primary" /> AI Insights
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {tips.map((tip, i) => (
-              <div key={i} className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-sm font-body leading-relaxed text-foreground">
-                {tip}
-              </div>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + i * 0.1 }}
+                className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10"
+              >
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Brain size={13} className="text-primary" />
+                </div>
+                <p className="text-sm font-body leading-relaxed text-foreground">
+                  {tip}
+                </p>
+              </motion.div>
             ))}
           </div>
         </motion.div>

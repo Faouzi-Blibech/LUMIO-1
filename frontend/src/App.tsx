@@ -19,7 +19,7 @@ import NotFound from "./pages/NotFound.tsx";
 import StudentDashboard from "./pages/student/StudentDashboard.tsx";
 import LiveSession from "./pages/student/LiveSession.tsx";
 import SessionSummary from "./pages/student/SessionSummary.tsx";
-import StudentAnalytics from "./pages/student/StudentAnalytics.tsx";
+import StudentSettings from "./pages/student/StudentSettings.tsx";
 import StudentHomework from "./pages/student/StudentHomework.tsx";
 
 // Teacher pages
@@ -70,7 +70,7 @@ const AppRoutes = () => {
           <Route path="/student/dashboard" element={<RequireAuth allowedRoles={["student"]}><AnimatedPage><StudentDashboard /></AnimatedPage></RequireAuth>} />
           <Route path="/student/session" element={<RequireAuth allowedRoles={["student"]}><AnimatedPage><LiveSession /></AnimatedPage></RequireAuth>} />
           <Route path="/student/session/:id/summary" element={<RequireAuth allowedRoles={["student"]}><AnimatedPage><SessionSummary /></AnimatedPage></RequireAuth>} />
-          <Route path="/student/analytics" element={<RequireAuth allowedRoles={["student"]}><AnimatedPage><StudentAnalytics /></AnimatedPage></RequireAuth>} />
+          <Route path="/student/settings" element={<RequireAuth allowedRoles={["student"]}><AnimatedPage><StudentSettings /></AnimatedPage></RequireAuth>} />
           <Route path="/student/homework" element={<RequireAuth allowedRoles={["student"]}><AnimatedPage><StudentHomework /></AnimatedPage></RequireAuth>} />
 
           {/* Teacher Routes — requires teacher login */}
