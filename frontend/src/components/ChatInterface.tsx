@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Message {
   id: number;
@@ -22,7 +23,10 @@ interface ChatInterfaceProps {
   onClose: () => void;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 0,
@@ -43,7 +47,7 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMsg: Message = {
@@ -57,18 +61,30 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const response = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
-      const assistantMsg: Message = {
-        id: messages.length + 1,
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setIsTyping(false);
-    }, 1200 + Math.random() * 800);
+    let response: string;
+    try {
+      const role = user?.role === "parent" ? "parent" : user?.role === "student" ? "student" : "teacher";
+      const res = await fetch(`${API_URL}/rag/${role}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message: userMsg.content }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      response = data.answer || sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+    } catch {
+      response = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+    }
+
+    const assistantMsg: Message = {
+      id: messages.length + 1,
+      role: "assistant",
+      content: response,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
+    setIsTyping(false);
   };
 
   return (

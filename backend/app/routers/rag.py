@@ -37,8 +37,12 @@ async def rag_teacher(
     _index_guard()
 
     if body.student_id:
+        try:
+            student_uuid = UUID(body.student_id)
+        except (ValueError, AttributeError):
+            raise HTTPException(status_code=422, detail="Invalid student_id format")
         result_row = await db.execute(
-            select(User).where(User.id == UUID(body.student_id))
+            select(User).where(User.id == student_uuid)
         )
         student = result_row.scalar_one_or_none()
         if student is None:
@@ -87,8 +91,12 @@ async def rag_parent(
     if not body.student_id:
         raise HTTPException(status_code=422, detail="student_id is required for parent endpoint")
 
+    try:
+        student_uuid = UUID(body.student_id)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=422, detail="Invalid student_id format")
     result_row = await db.execute(
-        select(User).where(User.id == UUID(body.student_id))
+        select(User).where(User.id == student_uuid)
     )
     student = result_row.scalar_one_or_none()
     if student is None:

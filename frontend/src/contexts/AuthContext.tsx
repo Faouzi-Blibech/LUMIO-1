@@ -11,12 +11,14 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => { success: boolean; error?: string };
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
 }
 
-// Demo credentials for all 4 roles
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+// Demo credentials — used as fallback when the backend is unreachable
 const DEMO_USERS: Record<string, { password: string; name: string; role: UserRole }> = {
   "student@lumio.tn": { password: "student123", name: "Ahmed Ben Ali", role: "student" },
   "teacher@lumio.tn": { password: "teacher123", name: "Ms. Trabelsi", role: "teacher" },
@@ -46,7 +48,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  const login = (email: string, password: string) => {
+  // Rehydrate session from backend cookie on mount
+  useEffect(() => {
+    const rehydrate = async () => {
+      try {
+        const res = await fetch(`${API_URL}/auth/me`, { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            setUser({ email: data.user.email, name: data.user.name, role: data.user.role });
+            return;
+          }
+        }
+      } catch {
+        // Backend unreachable — keep localStorage user if present
+      }
+    };
+    rehydrate();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    // Try real backend first
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUser({ email: data.user.email, name: data.user.name, role: data.user.role });
+        return { success: true };
+      }
+
+      if (res.status === 401) return { success: false, error: "Invalid credentials" };
+      if (res.status === 403) return { success: false, error: "Wrong role selected" };
+    } catch {
+      // Backend unreachable — fall through to demo login
+    }
+
+    // Fallback: demo credentials so UI never breaks without backend
     const entry = DEMO_USERS[email.toLowerCase()];
     if (!entry) return { success: false, error: "Account not found" };
     if (entry.password !== password) return { success: false, error: "Wrong password" };
@@ -56,6 +99,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    // Fire-and-forget backend logout to clear cookie
+    fetch(`${API_URL}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
     setUser(null);
   };
 

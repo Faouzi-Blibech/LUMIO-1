@@ -15,11 +15,11 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.success) {
       // Redirect based on role
       const roleMap: Record<string, string> = {
@@ -103,17 +103,6 @@ const Login = () => {
               Sign In
             </Button>
           </form>
-
-          {/* Demo credentials hint */}
-          <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
-            <p className="text-xs font-body font-medium text-foreground mb-2">Demo accounts:</p>
-            <div className="space-y-1 text-[11px] font-body text-muted-foreground">
-              <p><span className="text-foreground font-medium">Student:</span> student@lumio.tn / student123</p>
-              <p><span className="text-foreground font-medium">Teacher:</span> teacher@lumio.tn / teacher123</p>
-              <p><span className="text-foreground font-medium">Parent:</span> parent@lumio.tn / parent123</p>
-              <p><span className="text-foreground font-medium">Admin:</span> admin@lumio.tn / admin123</p>
-            </div>
-          </div>
 
           <p className="text-sm text-muted-foreground font-body text-center mt-8">
             Don't have an account?{" "}

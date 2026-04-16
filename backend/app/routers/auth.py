@@ -6,6 +6,7 @@ Why httpOnly cookies instead of returning the token in JSON?
   - The browser sends the cookie automatically with every request → no manual
     "Authorization: Bearer <token>" header management needed on the frontend
 """
+import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -36,7 +37,7 @@ def set_auth_cookie(response: Response, token: str) -> None:
         value=token,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=os.getenv("ENVIRONMENT", "development") == "production",
         max_age=settings.JWT_EXPIRE_MINUTES * 60,
     )
 
