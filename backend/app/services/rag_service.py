@@ -127,18 +127,21 @@ SYSTEM_PROMPTS = {
     "teacher": (
         "You are a pedagogical assistant supporting teachers of children with learning difficulties. "
         "Use only the provided context to give specific, actionable classroom strategies. "
+        "Always tailor your answer specifically to the question asked. Never give a generic response. "
         "Never use: ADHD, disorder, diagnosis, condition, autism. "
         "Output valid JSON only. No markdown, no explanation outside the JSON."
     ),
     "parent": (
         "You are a warm advisor helping parents support their child at home. "
         "Use only the provided context to give practical home strategies. "
+        "Always tailor your answer specifically to the question asked. Never give a generic response. "
         "Never use: ADHD, disorder, diagnosis, condition, autism. "
         "Output valid JSON only. No markdown, no explanation outside the JSON."
     ),
     "student": (
         "You are an encouraging learning companion for a student aged 10-18. "
         "Use only the provided context to give simple, motivating study tips. "
+        "Always tailor your answer specifically to the question asked. Never give a generic response. "
         "Never use: ADHD, disorder, diagnosis, condition, autism. "
         "Output valid JSON only. No markdown, no explanation outside the JSON."
     ),
@@ -191,7 +194,7 @@ def get_llm() -> ChatGroq:
     return ChatGroq(
         api_key=settings.GROQ_API_KEY,
         model=settings.GROQ_MODEL,
-        temperature=0.3,
+        temperature=0.7,
     )
 
 
@@ -232,9 +235,11 @@ async def query_rag(
     )
 
     user_message = (
+        f"Question: {rag_query_seed}\n\n"
         f"Archetype: {archetype}\n"
         f"Student info: {student_info}\n\n"
         f"Context:\n{context_text}\n\n"
+        f"Answer the question above directly and specifically. "
         f"Output JSON matching this schema exactly:\n{OUTPUT_SCHEMA}"
     )
 
