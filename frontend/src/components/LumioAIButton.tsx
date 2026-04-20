@@ -34,7 +34,7 @@ export const LumioAIButton = () => {
 
       <SheetContent
         side="right"
-        className="w-full sm:w-[400px] p-0 border-l border-border !bg-card [&>button:first-child]:hidden"
+        className="w-full sm:w-[400px] p-0 border-l border-border !bg-card [&>button]:hidden"
         style={{ backgroundColor: "hsl(var(--card))" }}
       >
         <ChatInterface onClose={() => setIsOpen(false)} />

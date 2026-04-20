@@ -59,3 +59,7 @@ LUMIO_PROJECT_CONTEXT.md
 .BUG_FIXES_REPORT.md
 DESIGN_SYSTEM_APPLIED.md
 LUMIO_DESIGN_INTEGRATION.md
+
+cookies.txt
+test*.json
+backend/scripts/training_data.csv

@@ -1,12 +1,33 @@
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { TeacherLayout } from "@/components/teacher/TeacherLayout";
 import { KpiCard } from "@/components/student/KpiCard";
 import { RiskBadge } from "@/components/student/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
-  Users, Brain, AlertTriangle, BookOpen, Play, TrendingUp, ArrowRight, Clock
+  Users, Brain, AlertTriangle, BookOpen, Play, TrendingUp, ArrowRight, Clock,
+  Upload, Loader2
 } from "lucide-react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+async function uploadDoc(file: File) {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(`${API_URL}/rag/upload`, {
+    method: "POST",
+    body: fd,
+    credentials: "include",
+  });
+  if (!res.ok) {
+    let detail = "Upload failed";
+    try { detail = (await res.json()).detail ?? detail; } catch {}
+    throw new Error(detail);
+  }
+  return (await res.json()) as { chunks_added: number; filename: string };
+}
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine
@@ -33,6 +54,32 @@ const recentActivity = [
 ];
 
 const TeacherDashboard = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setUploadResult(null);
+    setUploadError(null);
+    try {
+      const { chunks_added, filename } = await uploadDoc(file);
+      const msg = `${chunks_added} chunks added from ${filename}`;
+      setUploadResult(msg);
+      toast.success(msg);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      setUploadError(msg);
+      toast.error(msg);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <TeacherLayout>
       {/* Header */}
@@ -181,6 +228,51 @@ const TeacherDashboard = () => {
             </motion.div>
           ))}
         </div>
+      </motion.div>
+
+      {/* Knowledge Base Upload */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft mt-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-heading font-bold text-foreground flex items-center gap-2">
+              <Upload size={16} className="text-primary" /> Knowledge Base
+            </h2>
+            <p className="text-xs text-muted-foreground font-body mt-1">
+              Upload a PDF or .txt document to enrich the AI assistant.
+            </p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.txt"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+          <Button
+            variant="hero"
+            size="lg"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploading ? (
+              <><Loader2 size={16} className="mr-1.5 animate-spin" /> Uploading...</>
+            ) : (
+              <><Upload size={16} className="mr-1.5" /> Upload Document</>
+            )}
+          </Button>
+        </div>
+        {uploadResult && (
+          <p className="text-sm font-body text-success mt-2">{uploadResult}</p>
+        )}
+        {uploadError && (
+          <p className="text-sm font-body text-destructive mt-2">{uploadError}</p>
+        )}
       </motion.div>
     </TeacherLayout>
   );

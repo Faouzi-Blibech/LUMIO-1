@@ -59,7 +59,6 @@ export const StudentLayout = ({ children }: StudentLayoutProps) => {
             </div>
             <button className="relative p-2 rounded-xl hover:bg-muted/50 text-muted-foreground transition-colors">
               <Bell size={16} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
             </button>
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center font-heading font-bold text-primary text-sm">
               {user?.name?.charAt(0) || "A"}

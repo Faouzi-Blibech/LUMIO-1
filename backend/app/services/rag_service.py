@@ -123,36 +123,56 @@ DIAGNOSIS_BLACKLIST = re.compile(
 )
 
 # ── Audience-specific system prompts ─────────────────────────────────────────
+_SHARED_RULES = (
+    "Never state or imply a clinical diagnosis. Do not use the words: ADHD, disorder, "
+    "diagnosis, condition, autism. Describe observable patterns instead (e.g. 'difficulty "
+    "sustaining attention', 'challenges with focus'). "
+    "If the question is vague, you may ask a clarifying follow-up question inside the summary. "
+    "When retrieved context is relevant, weave it in naturally (e.g. 'based on current "
+    "learning-support guidelines...'). If the provided context does not cover the question, "
+    "still answer from general evidence-based knowledge rather than refusing. "
+    "Tone: warm, professional, supportive — never robotic or clinical. "
+    "The `summary` field should be a rich, well-structured answer (multi-paragraph when warranted); "
+    "use short paragraphs, and bullet points via '- ' when listing steps. "
+    "Output valid JSON only — no markdown fences, no prose outside the JSON."
+)
+
 SYSTEM_PROMPTS = {
     "teacher": (
-        "You are a pedagogical assistant supporting teachers of children with learning difficulties. "
-        "Use only the provided context to give specific, actionable classroom strategies. "
-        "Always tailor your answer specifically to the question asked. Never give a generic response. "
-        "Never use: ADHD, disorder, diagnosis, condition, autism. "
-        "Output valid JSON only. No markdown, no explanation outside the JSON."
+        "You are a knowledgeable pedagogical assistant supporting teachers of students with "
+        "attention and learning difficulties. Provide detailed, actionable guidance on classroom "
+        "strategies, accommodations, interpreting student data, and intervention planning. "
+        "Elaborate thoroughly when the question warrants depth — multi-paragraph answers are welcome. "
+        + _SHARED_RULES
     ),
     "parent": (
-        "You are a warm advisor helping parents support their child at home. "
-        "Use only the provided context to give practical home strategies. "
-        "Always tailor your answer specifically to the question asked. Never give a generic response. "
-        "Never use: ADHD, disorder, diagnosis, condition, autism. "
-        "Output valid JSON only. No markdown, no explanation outside the JSON."
+        "You are a warm, experienced advisor helping parents support a child who struggles with "
+        "focus and learning. Cover home routines, communication with the school, and ways to "
+        "understand the child's patterns. Use accessible language — avoid jargon, and when a "
+        "technical term is unavoidable, explain it briefly. Elaborate when the parent needs depth. "
+        + _SHARED_RULES
     ),
     "student": (
-        "You are an encouraging learning companion for a student aged 10-18. "
-        "Use only the provided context to give simple, motivating study tips. "
-        "Always tailor your answer specifically to the question asked. Never give a generic response. "
-        "Never use: ADHD, disorder, diagnosis, condition, autism. "
-        "Output valid JSON only. No markdown, no explanation outside the JSON."
+        "You are an encouraging learning companion for a student aged 10-18. Share study tips, "
+        "focus strategies, and self-regulation techniques in an age-appropriate, motivating tone. "
+        "Keep answers concise but complete — enough to actually help, without overwhelming. "
+        + _SHARED_RULES
     ),
 }
 
+# Per-audience generation budget (Groq max_tokens for the response).
+MAX_TOKENS_BY_AUDIENCE = {
+    "teacher": 2048,
+    "parent":  2048,
+    "student": 1024,
+}
+
 OUTPUT_SCHEMA = """{
-  "summary": "one sentence summary",
-  "for_teacher": ["strategy 1", "strategy 2", "strategy 3"],
-  "for_student": ["tip 1", "tip 2"],
-  "for_parent": ["guidance 1", "guidance 2"],
-  "sources": ["source 1", "source 2"],
+  "summary": "A thorough, well-structured answer to the user's question. May span multiple paragraphs and use '- ' bullet points where helpful.",
+  "for_teacher": ["concrete classroom strategy", "..."],
+  "for_student": ["practical tip for the student", "..."],
+  "for_parent": ["practical guidance for the parent", "..."],
+  "sources": ["source filename 1", "..."],
   "urgency": "low|medium|high",
   "professional_referral": false
 }"""
@@ -181,7 +201,7 @@ STATIC_FALLBACK = {
 
 # ── LLM factory ───────────────────────────────────────────────────────────────
 
-def get_llm() -> ChatGroq:
+def get_llm(max_tokens: int = 1024) -> ChatGroq:
     """
     Return a Groq LLM instance.
     Raises ValueError if the API key is missing so the developer gets a clear message.
@@ -195,6 +215,7 @@ def get_llm() -> ChatGroq:
         api_key=settings.GROQ_API_KEY,
         model=settings.GROQ_MODEL,
         temperature=0.7,
+        max_tokens=max_tokens,
     )
 
 
@@ -212,6 +233,7 @@ async def query_rag(
     student_context: dict,
     professional_referral_override: bool,
     audience: str = "teacher",
+    user_question: str | None = None,
 ) -> dict:
     """
     Full RAG pipeline: FAISS retrieval → Groq LLM → validated JSON.
@@ -223,7 +245,9 @@ async def query_rag(
     The professional_referral_override from the rule engine always wins — the
     LLM value is discarded. This is a hard safety requirement.
     """
-    chunks = retrieve(rag_query_seed, k=4)
+    effective_question = (user_question or "").strip() or rag_query_seed
+    retrieval_query = f"{effective_question}\n{rag_query_seed}".strip()
+    chunks = retrieve(retrieval_query, k=4)
     context_text = "\n\n".join(
         f"[{c['source']}]\n{c['content']}" for c in chunks
     ) if chunks else "No specific context available."
@@ -235,7 +259,7 @@ async def query_rag(
     )
 
     user_message = (
-        f"Question: {rag_query_seed}\n\n"
+        f"Question: {effective_question}\n\n"
         f"Archetype: {archetype}\n"
         f"Student info: {student_info}\n\n"
         f"Context:\n{context_text}\n\n"
@@ -243,7 +267,7 @@ async def query_rag(
         f"Output JSON matching this schema exactly:\n{OUTPUT_SCHEMA}"
     )
 
-    llm = get_llm()
+    llm = get_llm(max_tokens=MAX_TOKENS_BY_AUDIENCE.get(audience, 1024))
     strikes = 0
     result = None
 
@@ -273,3 +297,33 @@ async def query_rag(
     # Rule engine value always wins — LLM cannot override this
     result["professional_referral"] = professional_referral_override
     return result
+
+
+# ── Index maintenance ─────────────────────────────────────────────────────────
+
+def add_texts_to_index(chunks: list[str], source: str) -> int:
+    """
+    Add new text chunks to the live FAISS index and persist to disk.
+
+    If the index isn't loaded yet (no index.faiss on disk), build a fresh one
+    from the provided chunks using the already-initialized embeddings.
+    """
+    global _vectorstore, _embeddings
+
+    if _embeddings is None:
+        _embeddings = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL,
+            model_kwargs={"device": "cpu"},
+            encode_kwargs={"normalize_embeddings": True},
+        )
+
+    metadatas = [{"source": source} for _ in chunks]
+
+    if _vectorstore is None:
+        _vectorstore = FAISS.from_texts(chunks, _embeddings, metadatas=metadatas)
+    else:
+        _vectorstore.add_texts(chunks, metadatas=metadatas)
+
+    FAISS_INDEX_PATH.mkdir(parents=True, exist_ok=True)
+    _vectorstore.save_local(str(FAISS_INDEX_PATH))
+    return len(chunks)

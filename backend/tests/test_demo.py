@@ -144,9 +144,10 @@ def test_rag_teacher(client, users):
 # ── 5. /rag/parent ───────────────────────────────────────────────────────────
 def test_rag_parent(client, users):
     cookies = users["parent"]["cookies"]
+    student_id = users["student"]["data"]["id"]
     r = client.post(
         "/rag/parent",
-        json={"message": "How do I support my child with focus issues?"},
+        json={"message": "How do I support my child with focus issues?", "student_id": student_id},
         cookies=cookies,
     )
     assert r.status_code == 200
@@ -184,11 +185,11 @@ def test_session_start(client, users):
     assert "session_id" in body
 
 
-# ── 8. /homework/{class_id} ──────────────────────────────────────────────────
+# ── 8. /homework/student/{student_id} ────────────────────────────────────────
 def test_homework_list(client, users):
     cookies = users["teacher"]["cookies"]
-    r = client.get("/homework/class-001", cookies=cookies)
+    student_id = users["student"]["data"]["id"]
+    r = client.get(f"/homework/student/{student_id}", cookies=cookies)
     assert r.status_code == 200
     body = r.json()
-    assert "assignments" in body
-    assert isinstance(body["assignments"], list)
+    assert isinstance(body, list)
