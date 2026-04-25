@@ -363,7 +363,7 @@ Full reference for all supported environment variables:
 
 ---
 
-## 📧 n8n Email Automation
+##  n8n Email Automation
 
 Three ready-to-import n8n workflow files are included in `n8n-workflows/`:
 
