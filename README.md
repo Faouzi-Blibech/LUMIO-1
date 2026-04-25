@@ -39,21 +39,21 @@ Built for **IEEE CODE2CURE SIGHT Day Congress 4.0** — TBS & INSAT IEEE Student
 
 ---
 
-## 🎯 About the Project
+##  About the Project
 
 **LUMIO** is a real-time, privacy-first educational platform that connects students, teachers, and parents in a single unified ecosystem. It addresses a critical challenge in modern classrooms — students with attention difficulties often go undetected until they are significantly behind.
 
 Using **MediaPipe FaceMesh running entirely in the browser**, LUMIO tracks student focus continuously during study sessions. Focus data is streamed to the teacher's dashboard in real time. When a student's attention drops, the teacher is alerted with contextual data. When persistent patterns emerge, parents are automatically notified through automated email workflows.
 
 **What makes it different:**
-- 🔒 **Zero video surveillance** — all computer vision runs on the student's device. No frames are ever uploaded.
-- ⚡ **Real-time** — WebSocket-based live streaming from every student to the teacher dashboard simultaneously.
-- 📧 **Automated communication** — n8n workflows send clinically-aware alerts to teachers and parents without manual effort.
-- 🏥 **Clinically grounded** — focus thresholds, risk tiers, and alert logic are validated against DSM-5 criteria.
+-  **Zero video surveillance** — all computer vision runs on the student's device. No frames are ever uploaded.
+-  **Real-time** — WebSocket-based live streaming from every student to the teacher dashboard simultaneously.
+-  **Automated communication** — n8n workflows send clinically-aware alerts to teachers and parents without manual effort.
+-  **Clinically grounded** — focus thresholds, risk tiers, and alert logic are validated against DSM-5 criteria.
 
 ---
 
-## ✨ Features
+##  Features
 
 | Role | Key Features |
 |---|---|
@@ -65,7 +65,7 @@ Using **MediaPipe FaceMesh running entirely in the browser**, LUMIO tracks stude
 
 ---
 
-## 🏗 Architecture
+##  Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -100,7 +100,7 @@ Using **MediaPipe FaceMesh running entirely in the browser**, LUMIO tracks stude
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 LUMIO/
@@ -144,7 +144,7 @@ LUMIO/
 
 ---
 
-## ⚙️ Prerequisites
+##  Prerequisites
 
 Ensure the following are installed and running on your machine before proceeding:
 
@@ -167,7 +167,7 @@ Ensure the following are installed and running on your machine before proceeding
 
 ---
 
-## 🚀 Installation & Setup
+##  Installation & Setup
 
 ### Step 1 — Clone the repository
 
@@ -231,7 +231,7 @@ SUPABASE_URL=
 SUPABASE_ANON_KEY=
 ```
 
-> ⚠️ **Never commit `.env` to git.** It is already in `.gitignore`.
+
 
 ---
 
@@ -315,7 +315,7 @@ Vite will start on `http://localhost:5173` with hot-module replacement enabled.
 
 ---
 
-## 🌐 Running the Application
+##  Running the Application
 
 Once both Docker and the Vite dev server are running, open these URLs:
 
@@ -339,16 +339,16 @@ Once both Docker and the Vite dev server are running, open these URLs:
 
 ---
 
-## 🔑 Environment Variables
+##  Environment Variables
 
 Full reference for all supported environment variables:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `DATABASE_URL` | ✅ | — | PostgreSQL async connection string |
-| `REDIS_URL` | ✅ | — | Redis connection URL |
-| `JWT_SECRET_KEY` | ✅ | — | JWT signing secret — min 32 chars |
-| `LLM_PROVIDER` | ✅ | `ollama` | `"ollama"` or `"groq"` |
+| `DATABASE_URL` | — | PostgreSQL async connection string |
+| `REDIS_URL` | — | Redis connection URL |
+| `JWT_SECRET_KEY` | — | JWT signing secret — min 32 chars |
+| `LLM_PROVIDER` |   `ollama` | `"ollama"` or `"groq"` |
 | `OLLAMA_BASE_URL` | — | `http://host.docker.internal:11434` | Ollama server (local dev) |
 | `OLLAMA_MODEL` | — | `mistral:7b` | Generation model name |
 | `OLLAMA_EMBED_MODEL` | — | `nomic-embed-text` | Embedding model name |
@@ -384,7 +384,7 @@ Three ready-to-import n8n workflow files are included in `n8n-workflows/`:
 
 ---
 
-## 👤 User Roles & Portals
+##  User Roles & Portals
 
 ```
 /student/dashboard        Focus stats, recent sessions, upcoming homework
